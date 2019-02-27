@@ -1,0 +1,42 @@
+#########Find maximal intensity############
+find.max<-function(x){
+  options(scipen = 4, digits = 8)
+  x<-as.data.frame(x)
+  maxint<-integer(length = nrow(x))
+  maxwave<-vector(length = nrow(x))
+  for (i in 1:nrow(x)){
+    maxint[i]<-(max(x[i,]))
+    maxwave[i]<-rownames(as.data.frame(which.max(x[i,])))
+  }
+  results<-list(maxwave,maxint)
+  names(results)<-c("maxwave", "maxint")
+  print(results)
+}
+
+############evaluation functions#########
+rmse<-function(x,y){
+  sqrt(mean((x-y)^2))
+}
+bias<-function(x,y){
+  mean(abs(x-y))
+}
+sep<-function(x,y){
+  (sqrt(mean((x-y)^2)))^2-(mean(abs(x-y)))^2
+}
+
+rsq <- function(x, y){cor(x, y) ^ 2} 
+
+rpd<-function(x, y){
+  sd(x)/rmse(x,y)
+}
+
+rpe <- function (x,y){
+  rmse(x,y)/mean(x)*100
+}
+
+diag<-function(x,y){
+  result<-cbind(rmse(x,y), bias(x,y), rsq(x,y), rpd(x,y), rpe(x,y))
+  colnames(result)<-c("RMSE", "bias","R-2", "RPD", "RPE")
+  options(digits = 4)
+  return(result)
+}
