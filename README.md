@@ -4,3 +4,5 @@ Collection of spectral processing R code. Most of the code involves spectra prep
 #### "Mine pro.R" 
 This is a function written for explorotory spectral modelling using PLSR. The output gives the best performing preprocessing techqniue using leave-one-out crossvalidation. 
 
+#### "Spec fun.R"
+This script contains several helpful little functions to characterize and diagnose model performance.
