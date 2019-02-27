@@ -1,0 +1,137 @@
+prepropls<-function(X, y, normalization, derivative, SGpoints, ncomp){
+  if(nrow(X) != length(y)){ stop("X and y should have equal number of rows")}
+  if(missing(ncomp)){ncomp = 10}
+  if(missing(SGpoints)){SGpoints = 9}
+  if(missing(normalization)){normalization = normsum}
+  if(missing(derivative)){derivative = dersum}
+  require(caret)
+  require(prospectr)
+  normsum<-c("mean", "unit", "SNV", "max", "area")
+  dersum<-c("1st","2nd")
+  if(normalization %in% normsum == F){stop("normalization options are out of range")}
+  if(derivative %in% dersum == F){stop("derivative options are out of range")}
+  options(digits = 3)
+  normalist<-list()
+  derlist<-list()
+  SGlist<-list()
+  if(length(derivative) == 1 & "1st" %in% derivative)
+  {derlist[["SG1"]]<-savitzkyGolay(X, p = 2, w = (SGpoints*2+1), m = 1)
+  }else{derlist[["SG2"]]<-savitzkyGolay(X, p = 2, w = (SGpoints*2+1), m = 2)}
+  
+  if(length(derivative)== 2){
+    derlist[["SG1"]]<-savitzkyGolay(X, p = 2, w = (SGpoints*2+1), m = 1)
+    derlist[["SG2"]]<-savitzkyGolay(X, p = 2, w = (SGpoints*2+1), m = 2)
+  }
+  if("max" %in% normalization){
+    Xmax<-data.frame(matrix(nrow = nrow(X), ncol = ncol(X)))
+    for (i in 1:nrow(X)){
+      Xmax[i,]<-X[i,]/max(X[i,])
+    }
+    normalist[["max"]]<-Xmax
+    if(length(derivative) == 1 & "1st" %in% derivative)
+    {SGlist[["XmaxSG1"]]<-savitzkyGolay(Xmax, p = 2, w = (SGpoints*2+1), m = 1)
+    }else{SGlist[["XmaxSG2"]]<-savitzkyGolay(Xmax, p = 2, w = (SGpoints*2+1), m = 2)}
+    
+    if(length(derivative)== 2){
+      SGlist[["XmaxSG1"]]<-savitzkyGolay(Xmax, p = 2, w = (SGpoints*2+1), m = 1)
+      SGlist[["XmaxSG2"]]<-savitzkyGolay(Xmax, p = 2, w = (SGpoints*2+1), m = 2)
+    }
+  }
+  
+  if("mean" %in% normalization){
+    Xmean<-data.frame(matrix(nrow = nrow(X), ncol = ncol(X) ))
+    for (i in 1:nrow(X)){
+    Xmean[i,]<-X[i,]/as.matrix(rowMeans(X))[i,]
+    }
+    normalist[["mean"]]<-Xmean
+    if(length(derivative) == 1 & "1st" %in% derivative)
+    {SGlist[["XmeanSG1"]]<-savitzkyGolay(Xmean, p = 2, w = (SGpoints*2+1), m = 1)
+    }else{SGlist[["XmeanSG2"]]<-savitzkyGolay(Xmean, p = 2, w = (SGpoints*2+1), m = 2)}
+    
+    if(length(derivative)== 2){
+      SGlist[["XmeanSG1"]]<-savitzkyGolay(Xmean, p = 2, w = (SGpoints*2+1), m = 1)
+      SGlist[["XmeanSG2"]]<-savitzkyGolay(Xmean, p = 2, w = (SGpoints*2+1), m = 2)
+    }
+   }
+  
+  if("unit" %in% normalization){
+    Xunit<-data.frame(matrix(nrow = nrow(X), ncol = ncol(X) ))
+    for (i in 1:nrow(X)){
+      Xunit[i,]<-(X[i,]-as.matrix(rowMeans(X))[i,])/(max(X[i,])-min(X[i,]))
+    }
+    normalist[["unit"]]<-Xunit
+    if(length(derivative) == 1 & "1st" %in% derivative)
+    {SGlist[["XunitSG1"]]<-savitzkyGolay(Xunit, p = 2, w = (SGpoints*2+1), m = 1)
+    }else{SGlist[["XunitSG2"]]<-savitzkyGolay(Xunit, p = 2, w = (SGpoints*2+1), m = 2)}
+    
+    if(length(derivative)== 2){
+      SGlist[["XunitSG1"]]<-savitzkyGolay(Xunit, p = 2, w = (SGpoints*2+1), m = 1)
+      SGlist[["XunitSG2"]]<-savitzkyGolay(Xunit, p = 2, w = (SGpoints*2+1), m = 2)
+    }
+  }
+  
+  if("SNV" %in% normalization){
+    XSNV<-data.frame(matrix(nrow = nrow(X), ncol = ncol(X) ))
+    for (i in 1:nrow(X)){
+      XSNV[i,]<-(X[i,]-as.matrix(rowMeans(X))[i,])/sd(X[i,])
+    }
+    normalist[["SNV"]]<-XSNV
+    if(length(derivative) == 1 & "1st" %in% derivative)
+    {SGlist[["XSNVSG1"]]<-savitzkyGolay(XSNV, p = 2, w = (SGpoints*2+1), m = 1)
+    }else{SGlist[["XSNVSG2"]]<-savitzkyGolay(XSNV, p = 2, w = (SGpoints*2+1), m = 2)}
+    
+    if(length(derivative)== 2){
+      SGlist[["XSNVSG1"]]<-savitzkyGolay(XSNV, p = 2, w = (SGpoints*2+1), m = 1)
+      SGlist[["XSNVSG2"]]<-savitzkyGolay(XSNV, p = 2, w = (SGpoints*2+1), m = 2)
+    }
+    }
+  
+  if("area" %in% normalization){
+    Xarea<-data.frame(matrix(nrow = nrow(X), ncol = ncol(X) ))
+    for (i in 1:nrow(X)){
+      Xarea[i,]<-(X[i,]/sum(X[i,]))
+    }
+    normalist[["area"]]<-Xarea
+    if(length(derivative) == 1 & "1st" %in% derivative)
+    {SGlist[["XareaSG1"]]<-savitzkyGolay(Xarea, p = 2, w = (SGpoints*2+1), m = 1)
+    }else{SGlist[["XareaSG2"]]<-savitzkyGolay(Xarea, p = 2, w = (SGpoints*2+1), m = 2)}
+    
+    if(length(derivative)== 2){
+      SGlist[["XareaSG1"]]<-savitzkyGolay(Xarea, p = 2, w = (SGpoints*2+1), m = 1)
+      SGlist[["XareaSG2"]]<-savitzkyGolay(Xarea, p = 2, w = (SGpoints*2+1), m = 2)
+    }
+  }
+  
+#######predictions#######
+  tc<-trainControl(method = "LOOCV") #tune parameters#
+  derresults<-data.frame(matrix(nrow = length(derlist), ncol = 4))
+  for (i in 1:length(derlist)){
+    dercal<-as.matrix(cbind(y,derlist[[i]]))
+    derpls<-train(y ~.,  data = dercal, tuneLength = ncomp, method = "pls", trControl = tc)
+    derresults[i,]<-derpls$results[derpls$bestTune[1,1],]
+  }
+  der <- cbind(names(derlist), derresults, sd(y)/derresults[,2],derresults[,2]/mean(y))
+  colnames(der)<-c("trt", "nLv", "RMSE", "R2","MAE","RPD","RPE")
+  
+  
+  normresults<-data.frame(matrix(nrow = length(normalist), ncol = 4))
+  for (i in 1:length(normalist)){
+    normcal<-as.matrix(cbind(y,normalist[[i]]))
+    normpls<-train(y ~.,  data = normcal, tuneLength = ncomp, method = "pls", trControl = tc)
+    normresults[i,]<-normpls$results[normpls$bestTune[1,1],]
+  }
+  norm <- cbind(names(normalist), normresults, sd(y)/normresults[,2],normresults[,2]/mean(y))
+  colnames(norm)<-c("trt", "nLv", "RMSE", "R2","MAE","RPD","RPE")
+  
+  SGresults<-data.frame(matrix(nrow = length(SGlist), ncol = 4))
+  for (i in 1:length(SGlist)){
+    SGcal<-as.matrix(cbind(y,SGlist[[i]]))
+    SGpls<-train(y ~.,  data = SGcal, tuneLength = ncomp, method = "pls", trControl = tc)
+    SGresults[i,]<-SGpls$results[SGpls$bestTune[1,1],]
+  }
+  SG <- cbind(names(SGlist), SGresults, sd(y)/SGresults[,2],SGresults[,2]/mean(y))
+  colnames(SG)<-c("trt", "nLv", "RMSE", "R2","MAE","RPD","RPE")
+  
+  return(list(der = der,norm = norm, SG = SG))
+   
+}
